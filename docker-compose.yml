@@ -1,0 +1,47 @@
+# ════════════════════════════════════════════════════════════════════════════
+# docker-compose.yml — DeployFlow Local Development
+# Usage: docker-compose up -d --build
+# ════════════════════════════════════════════════════════════════════════════
+version: "3.9"
+
+services:
+  # ─── Flask Web Application ───────────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deployflow-web
+    image: deployflow:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - ENVIRONMENT=development
+      - PORT=5000
+      - SECRET_KEY=${SECRET_KEY:-deployflow-local-dev-secret}
+      - DATABASE_URL=/app/data/deployflow.db
+      - BUILD_NUMBER=${BUILD_NUMBER:-local}
+    volumes:
+      # Persist SQLite database across container restarts
+      - deployflow-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    labels:
+      - "com.deployflow.service=web"
+      - "com.deployflow.version=1.0.0"
+    networks:
+      - deployflow-net
+
+# ─── Named Volumes ──────────────────────────────────────────────────────────
+volumes:
+  deployflow-data:
+    driver: local
+
+# ─── Networks ───────────────────────────────────────────────────────────────
+networks:
+  deployflow-net:
+    driver: bridge

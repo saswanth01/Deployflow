@@ -1,0 +1,53 @@
+# ════════════════════════════════════════════════════════════════════════════
+# .dockerignore — Files excluded from Docker build context
+# Keep the image lean: no dev files, caches, or secrets
+# ════════════════════════════════════════════════════════════════════════════
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# Version control
+.git/
+.gitignore
+
+# Documentation
+README.md
+docs/
+
+# Local database files (use volume mounts in production)
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Node / build artifacts (if any)
+node_modules/
+dist/
+build/
+
+# CI/CD configs (not needed inside the container)
+.github/
+
+# Secrets and local configs
+.env*
+*.env
+secrets/

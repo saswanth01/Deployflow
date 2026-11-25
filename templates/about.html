@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}About — DeployFlow{% endblock %}
+{% block page_title %}<i class="bi bi-info-circle-fill me-2 text-primary"></i>About Project{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="about-hero mb-4">
+  <div class="text-center py-5">
+    <div class="about-logo mb-3">
+      <i class="bi bi-rocket-takeoff-fill" style="font-size:3rem;color:#6366f1"></i>
+    </div>
+    <h1 class="about-title">DeployFlow</h1>
+    <p class="about-tagline">Automated CI/CD Pipeline for a Containerized Web Application</p>
+    <p class="text-muted">Final Year Engineering Project &mdash; Demonstrating End-to-End DevOps Workflow</p>
+    <div class="d-flex justify-content-center gap-2 flex-wrap mt-3">
+      <span class="tag tag-blue"><i class="bi bi-github me-1"></i>GitHub Actions</span>
+      <span class="tag tag-cyan"><i class="bi bi-boxes me-1"></i>Docker</span>
+      <span class="tag tag-purple"><i class="bi bi-cloud me-1"></i>Render</span>
+      <span class="tag tag-green"><i class="bi bi-check2-all me-1"></i>Pytest</span>
+      <span class="tag tag-blue"><i class="bi bi-filetype-py me-1"></i>Flask</span>
+    </div>
+  </div>
+</div>
+
+<!-- Objectives -->
+<div class="card-dark mb-4">
+  <div class="card-dark-header">
+    <span><i class="bi bi-bullseye me-2 text-cyan"></i>Project Objectives</span>
+  </div>
+  <div class="card-dark-body">
+    <div class="row g-3">
+      {% set objectives = [
+        ("bi-code-slash","Build a production-quality web application","Develop a full-stack Flask application with a professional dark-themed dashboard UI."),
+        ("bi-boxes","Containerize with Docker","Create a production-ready Dockerfile, docker-compose setup, and container health checks."),
+        ("bi-diagram-3-fill","Automate CI/CD with GitHub Actions","Configure automated build, test, and deployment pipelines triggered on every push."),
+        ("bi-cloud-arrow-up","Deploy to Render","Achieve a live, publicly accessible deployment with zero-downtime deploys."),
+        ("bi-shield-check","Implement automated testing","Write unit and integration tests with Pytest to ensure code quality at every push."),
+      ] %}
+      {% for icon, title, desc in objectives %}
+      <div class="col-md-6">
+        <div class="objective-item">
+          <i class="bi {{ icon }} text-primary objective-icon"></i>
+          <div>
+            <div class="fw-semibold text-light">{{ title }}</div>
+            <div class="text-muted small">{{ desc }}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Tech Stack -->
+<div class="card-dark mb-4">
+  <div class="card-dark-header">
+    <span><i class="bi bi-stack me-2 text-purple"></i>Technology Stack</span>
+  </div>
+  <div class="card-dark-body">
+    <div class="row g-3">
+      {% for t in tech %}
+      <div class="col-sm-6 col-md-4 col-xl-3">
+        <div class="tech-card">
+          <i class="bi {{ t.icon }} tech-icon"></i>
+          <div class="tech-name">{{ t.name }}</div>
+          <div class="tech-role text-muted">{{ t.role }}</div>
+          <div class="tech-version text-cyan">{{ t.version }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Architecture -->
+<div class="card-dark mb-4">
+  <div class="card-dark-header">
+    <span><i class="bi bi-diagram-2-fill me-2 text-green"></i>Architecture Overview</span>
+  </div>
+  <div class="card-dark-body">
+    <div class="arch-flow">
+      <div class="arch-block arch-dev">
+        <i class="bi bi-laptop"></i>
+        <span>Developer</span>
+        <small>git push</small>
+      </div>
+      <div class="arch-arrow"><i class="bi bi-arrow-right"></i></div>
+      <div class="arch-block arch-github">
+        <i class="bi bi-github"></i>
+        <span>GitHub</span>
+        <small>Trigger Action</small>
+      </div>
+      <div class="arch-arrow"><i class="bi bi-arrow-right"></i></div>
+      <div class="arch-block arch-ci">
+        <i class="bi bi-gear-fill"></i>
+        <span>CI Pipeline</span>
+        <small>Test → Build</small>
+      </div>
+      <div class="arch-arrow"><i class="bi bi-arrow-right"></i></div>
+      <div class="arch-block arch-docker">
+        <i class="bi bi-box-seam-fill"></i>
+        <span>Docker</span>
+        <small>Containerize</small>
+      </div>
+      <div class="arch-arrow"><i class="bi bi-arrow-right"></i></div>
+      <div class="arch-block arch-render">
+        <i class="bi bi-cloud-fill"></i>
+        <span>Render</span>
+        <small>Deploy</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Project Structure -->
+<div class="card-dark mb-4">
+  <div class="card-dark-header">
+    <span><i class="bi bi-folder2-open me-2 text-yellow"></i>Project Structure</span>
+  </div>
+  <div class="card-dark-body">
+    <pre class="code-block"><code class="text-cyan">deployflow/
+├── app.py                        # Flask application entry point
+├── requirements.txt              # Python dependencies
+├── Dockerfile                    # Production Docker image
+├── docker-compose.yml            # Multi-service compose config
+├── .dockerignore                 # Docker build exclusions
+├── README.md                     # Project documentation
+├── <span class="text-purple">.github/
+│   └── workflows/
+│       └── ci-cd.yml</span>             # GitHub Actions CI/CD pipeline
+├── <span class="text-green">templates/</span>
+│   ├── base.html                 # Shared layout with sidebar
+│   ├── index.html                # Home Dashboard
+│   ├── deployments.html          # Deployment History
+│   ├── pipeline.html             # Pipeline Monitoring
+│   ├── builds.html               # Build & Test Results
+│   ├── containers.html           # Docker Container Status
+│   ├── health_status.html        # System Health
+│   ├── about.html                # About Project
+│   ├── 404.html                  # Error pages
+│   └── 500.html
+├── <span class="text-blue">static/
+│   ├── css/style.css</span>             # Custom dark theme CSS
+│   └── <span class="text-blue">js/main.js</span>               # Interactive dashboard scripts
+└── <span class="text-orange">tests/
+    ├── __init__.py
+    └── test_app.py</span>               # Unit & integration tests</code></pre>
+  </div>
+</div>
+{% endblock %}

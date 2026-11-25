@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Pipeline — DeployFlow{% endblock %}
+{% block page_title %}<i class="bi bi-diagram-3-fill me-2 text-primary"></i>Pipeline Monitoring{% endblock %}
+
+{% block content %}
+<div class="page-header-row mb-4">
+  <div>
+    <h2 class="page-h2">CI/CD Pipeline — Build #42</h2>
+    <p class="text-muted">GitHub Actions workflow on <code>main</code> branch &mdash; commit <code class="text-purple">a3f92c1</code></p>
+  </div>
+  <div>
+    <span class="status-badge running"><i class="bi bi-arrow-repeat me-1 spin"></i>In Progress</span>
+  </div>
+</div>
+
+<!-- ═══ Animated Pipeline Stages ════════════════════════════════════════════ -->
+<div class="card-dark mb-4">
+  <div class="card-dark-header">
+    <span><i class="bi bi-diagram-3 me-2 text-purple"></i>Pipeline Stages</span>
+    <span class="badge-demo">🎬 Animated Demo</span>
+  </div>
+  <div class="card-dark-body">
+    <div class="pipeline-flow">
+      {% for stage in stages %}
+      <div class="pipeline-stage stage-{{ stage.status }}" style="animation-delay: {{ loop.index0 * 0.15 }}s">
+        <div class="stage-icon-wrap">
+          <i class="bi {{ stage.icon }} stage-icon"></i>
+          {% if stage.status == 'success' %}
+            <span class="stage-check"><i class="bi bi-check-lg"></i></span>
+          {% elif stage.status == 'running' %}
+            <span class="stage-spin"><i class="bi bi-arrow-repeat"></i></span>
+          {% elif stage.status == 'failed' %}
+            <span class="stage-fail"><i class="bi bi-x-lg"></i></span>
+          {% endif %}
+        </div>
+        <div class="stage-name">{{ stage.name }}</div>
+        <div class="stage-duration">{{ stage.duration }}</div>
+        <div class="stage-status-label">
+          {% if stage.status == 'success' %}<span class="text-success">✓ Done</span>
+          {% elif stage.status == 'running' %}<span class="text-warning">⟳ Running</span>
+          {% elif stage.status == 'failed' %}<span class="text-danger">✗ Failed</span>
+          {% else %}<span class="text-muted">⏳ Waiting</span>{% endif %}
+        </div>
+      </div>
+      {% if not loop.last %}
+      <div class="pipeline-connector {% if stage.status == 'success' %}connector-active{% endif %}">
+        <div class="connector-line"></div>
+        <i class="bi bi-chevron-right connector-arrow"></i>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Workflow YAML Preview ════════════════════════════════════════════════ -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-7">
+    <div class="card-dark h-100">
+      <div class="card-dark-header">
+        <span><i class="bi bi-file-code me-2 text-cyan"></i>GitHub Actions Workflow</span>
+        <span class="badge-info">ci-cd.yml</span>
+      </div>
+      <div class="card-dark-body p-0">
+        <pre class="code-block"><code class="text-cyan"># .github/workflows/ci-cd.yml
+name: DeployFlow CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+
+  docker-build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t deployflow:latest .
+      - name: Test container health
+        run: |
+          docker run -d -p 5000:5000 --name df deployflow:latest
+          sleep 5
+          curl -f http://localhost:5000/health
+          docker stop df
+
+  deploy:
+    needs: docker-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to Render
+        run: |
+          curl -X POST {% raw %}\${{ secrets.RENDER_DEPLOY_HOOK }}{% endraw %}</code></pre>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card-dark h-100">
+      <div class="card-dark-header">
+        <span><i class="bi bi-clock-history me-2 text-green"></i>Recent Runs</span>
+      </div>
+      <div class="card-dark-body p-0">
+        <table class="table table-dark table-hover mb-0">
+          <thead>
+            <tr><th>#</th><th>Branch</th><th>Status</th><th>Duration</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code class="text-cyan">#42</code></td>
+              <td><span class="branch-badge">main</span></td>
+              <td><span class="status-badge running"><i class="bi bi-arrow-repeat spin me-1"></i>Running</span></td>
+              <td><span class="text-muted">1m 10s…</span></td>
+            </tr>
+            <tr>
+              <td><code class="text-cyan">#41</code></td>
+              <td><span class="branch-badge">feature/dark-mode</span></td>
+              <td><span class="status-badge success"><i class="bi bi-check-circle-fill me-1"></i>Success</span></td>
+              <td><span class="text-muted">2m 44s</span></td>
+            </tr>
+            <tr>
+              <td><code class="text-cyan">#40</code></td>
+              <td><span class="branch-badge">hotfix/auth-bug</span></td>
+              <td><span class="status-badge failed"><i class="bi bi-x-circle-fill me-1"></i>Failed</span></td>
+              <td><span class="text-muted">1m 03s</span></td>
+            </tr>
+            <tr>
+              <td><code class="text-cyan">#39</code></td>
+              <td><span class="branch-badge">develop</span></td>
+              <td><span class="status-badge success"><i class="bi bi-check-circle-fill me-1"></i>Success</span></td>
+              <td><span class="text-muted">2m 31s</span></td>
+            </tr>
+            <tr>
+              <td><code class="text-cyan">#38</code></td>
+              <td><span class="branch-badge">main</span></td>
+              <td><span class="status-badge success"><i class="bi bi-check-circle-fill me-1"></i>Success</span></td>
+              <td><span class="text-muted">2m 09s</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="alert-demo">
+  <i class="bi bi-info-circle-fill me-2"></i>
+  <strong>Demo Notice:</strong> Pipeline stage animation and run history are illustrative. The actual workflow YAML above is the real <code>.github/workflows/ci-cd.yml</code> used in this project.
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Animate pipeline stages on load
+  document.querySelectorAll('.pipeline-stage').forEach((el, i) => {
+    setTimeout(() => el.classList.add('stage-visible'), i * 200);
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — DeployFlow{% endblock %}
+{% block page_title %}<i class="bi bi-grid-1x2-fill me-2 text-primary"></i>Home Dashboard{% endblock %}
+
+{% block content %}
+<!-- ═══ Hero Banner ══════════════════════════════════════════════════════════ -->
+<div class="hero-banner mb-4">
+  <div class="hero-content">
+    <div class="hero-left">
+      <div class="hero-icon-wrap">
+        <i class="bi bi-rocket-takeoff-fill hero-icon"></i>
+        <span class="hero-pulse"></span>
+      </div>
+      <div>
+        <h1 class="hero-title">DeployFlow</h1>
+        <p class="hero-subtitle">Automated CI/CD Pipeline Dashboard &mdash; Real-time visibility into your DevOps workflow</p>
+        <div class="hero-tags">
+          <span class="tag tag-blue"><i class="bi bi-github me-1"></i>GitHub Actions</span>
+          <span class="tag tag-cyan"><i class="bi bi-boxes me-1"></i>Docker</span>
+          <span class="tag tag-purple"><i class="bi bi-cloud me-1"></i>Render</span>
+          <span class="tag tag-green"><i class="bi bi-check2-all me-1"></i>Pytest</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-right d-none d-lg-flex">
+      <div class="mini-pipeline">
+        <div class="mp-step active"><i class="bi bi-code-slash"></i><span>Code</span></div>
+        <div class="mp-arrow"><i class="bi bi-arrow-right"></i></div>
+        <div class="mp-step active"><i class="bi bi-check2-square"></i><span>Test</span></div>
+        <div class="mp-arrow"><i class="bi bi-arrow-right"></i></div>
+        <div class="mp-step active"><i class="bi bi-boxes"></i><span>Build</span></div>
+        <div class="mp-arrow"><i class="bi bi-arrow-right"></i></div>
+        <div class="mp-step pulse"><i class="bi bi-cloud-upload"></i><span>Deploy</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ KPI Cards ════════════════════════════════════════════════════════════ -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card border-blue">
+      <div class="kpi-icon bg-blue-soft"><i class="bi bi-arrow-repeat text-blue"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-value">{{ total_deploys }}</div>
+        <div class="kpi-label">Total Deployments</div>
+        <div class="kpi-change up"><i class="bi bi-arrow-up-short"></i> +3 this week</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card border-green">
+      <div class="kpi-icon bg-green-soft"><i class="bi bi-check-circle-fill text-success"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-value text-success">{{ success_rate }}%</div>
+        <div class="kpi-label">Success Rate</div>
+        <div class="kpi-change up"><i class="bi bi-arrow-up-short"></i> +2.1% vs last month</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card border-red">
+      <div class="kpi-icon bg-red-soft"><i class="bi bi-x-circle-fill text-danger"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-value text-danger">{{ failed_deploys }}</div>
+        <div class="kpi-label">Failed Builds</div>
+        <div class="kpi-change down"><i class="bi bi-arrow-down-short"></i> -1 vs last week</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="kpi-card border-cyan">
+      <div class="kpi-icon bg-cyan-soft"><i class="bi bi-clock-history text-cyan"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-value text-cyan">2m 18s</div>
+        <div class="kpi-label">Avg Build Time</div>
+        <div class="kpi-change up"><i class="bi bi-arrow-up-short"></i> Faster by 12s</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Charts Row ═══════════════════════════════════════════════════════════ -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card-dark">
+      <div class="card-dark-header">
+        <span><i class="bi bi-bar-chart-line me-2 text-primary"></i>Build Duration Trend (last 7 days)</span>
+        <span class="badge-demo">📊 Demo Data</span>
+      </div>
+      <div class="card-dark-body">
+        <canvas id="buildDurationChart" height="100"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card-dark">
+      <div class="card-dark-header">
+        <span><i class="bi bi-pie-chart-fill me-2 text-purple"></i>Deploy Status</span>
+        <span class="badge-demo">📊 Demo Data</span>
+      </div>
+      <div class="card-dark-body d-flex align-items-center justify-content-center" style="min-height:200px">
+        <canvas id="statusDonut" style="max-height:200px"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Recent Deployments + System Info ════════════════════════════════════ -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card-dark">
+      <div class="card-dark-header">
+        <span><i class="bi bi-clock-history me-2 text-cyan"></i>Recent Deployments</span>
+        <a href="{{ url_for('deployments') }}" class="btn btn-xs btn-outline-primary">View All</a>
+      </div>
+      <div class="card-dark-body p-0">
+        <div class="table-responsive">
+          <table class="table table-dark table-hover mb-0 deployments-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>Branch</th><th>Author</th><th>Env</th><th>Status</th><th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in recent_deployments %}
+              <tr>
+                <td><code class="text-cyan">{{ d.deploy_id }}</code></td>
+                <td><span class="branch-badge"><i class="bi bi-git me-1"></i>{{ d.branch }}</span></td>
+                <td><span class="text-muted">{{ d.author.split('@')[0] }}</span></td>
+                <td>
+                  {% if d.environment == 'production' %}
+                    <span class="env-tag env-prod">prod</span>
+                  {% elif d.environment == 'staging' %}
+                    <span class="env-tag env-stage">stage</span>
+                  {% else %}
+                    <span class="env-tag env-dev">dev</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if d.status == 'success' %}
+                    <span class="status-badge success"><i class="bi bi-check-circle-fill me-1"></i>Success</span>
+                  {% elif d.status == 'failed' %}
+                    <span class="status-badge failed"><i class="bi bi-x-circle-fill me-1"></i>Failed</span>
+                  {% else %}
+                    <span class="status-badge running"><i class="bi bi-arrow-repeat me-1 spin"></i>Running</span>
+                  {% endif %}
+                </td>
+                <td><span class="text-muted small">{{ d.triggered_at[:16] }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card-dark h-100">
+      <div class="card-dark-header">
+        <span><i class="bi bi-cpu me-2 text-green"></i>System Info</span>
+        <span class="badge-live">🟢 Live</span>
+      </div>
+      <div class="card-dark-body">
+        <ul class="info-list">
+          <li><span class="info-key">Environment</span><span class="info-val env-tag env-dev">{{ environment | upper }}</span></li>
+          <li><span class="info-key">App Version</span><span class="info-val text-cyan">v{{ version }}</span></li>
+          <li><span class="info-key">Build #</span><span class="info-val text-purple">#{{ build_number }}</span></li>
+          <li><span class="info-key">Uptime</span><span class="info-val text-green">{{ uptime }}</span></li>
+          <li><span class="info-key">Health</span>
+            <a href="{{ url_for('health') }}" target="_blank" class="info-val text-success">
+              <i class="bi bi-activity me-1"></i>OK
+            </a>
+          </li>
+          <li><span class="info-key">DB Status</span><span class="info-val text-success"><i class="bi bi-database-check me-1"></i>Connected</span></li>
+          <li><span class="info-key">Running Deploys</span><span class="info-val text-warning">{{ running_deploys }}</span></li>
+          <li><span class="info-key">Success Deploys</span><span class="info-val text-success">{{ success_deploys }}</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Deploy Frequency Chart ═══════════════════════════════════════════════ -->
+<div class="card-dark mb-4">
+  <div class="card-dark-header">
+    <span><i class="bi bi-graph-up me-2 text-cyan"></i>Deployment Frequency (last 7 days)</span>
+    <span class="badge-demo">📊 Demo Data</span>
+  </div>
+  <div class="card-dark-body">
+    <canvas id="deployFreqChart" height="60"></canvas>
+  </div>
+</div>
+
+<div class="alert-demo mb-3">
+  <i class="bi bi-info-circle-fill me-2"></i>
+  <strong>Demo Notice:</strong> Charts and trend data are generated for demonstration purposes. The deployment count, health endpoint, and system info above reflect real application state.
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Fetch real metrics from API
+  fetch('/api/metrics').then(r => r.json()).then(data => {
+    // Build Duration Bar Chart
+    const ctx1 = document.getElementById('buildDurationChart').getContext('2d');
+    new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: data.chart_labels,
+        datasets: [{
+          label: 'Build Duration (s)',
+          data: data.build_durations,
+          backgroundColor: 'rgba(99,102,241,0.7)',
+          borderColor: '#6366f1',
+          borderWidth: 2,
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: '#94a3b8' } } },
+        scales: {
+          x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        }
+      }
+    });
+
+    // Status Donut Chart
+    const ctx2 = document.getElementById('statusDonut').getContext('2d');
+    new Chart(ctx2, {
+      type: 'doughnut',
+      data: {
+        labels: ['Success', 'Failed', 'Running'],
+        datasets: [{
+          data: [data.success, data.failed, data.running],
+          backgroundColor: ['#22c55e','#ef4444','#f59e0b'],
+          borderColor: '#0f172a',
+          borderWidth: 3,
+          hoverOffset: 8,
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '70%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12 } }
+        }
+      }
+    });
+
+    // Deploy Frequency Line Chart
+    const ctx3 = document.getElementById('deployFreqChart').getContext('2d');
+    new Chart(ctx3, {
+      type: 'line',
+      data: {
+        labels: data.chart_labels,
+        datasets: [{
+          label: 'Deployments per Day',
+          data: data.deploy_frequency,
+          fill: true,
+          backgroundColor: 'rgba(6,182,212,0.15)',
+          borderColor: '#06b6d4',
+          borderWidth: 2,
+          tension: 0.4,
+          pointBackgroundColor: '#06b6d4',
+          pointRadius: 5,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: '#94a3b8' } } },
+        scales: {
+          x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, min: 0 }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

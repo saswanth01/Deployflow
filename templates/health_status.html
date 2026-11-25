@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}System Health — DeployFlow{% endblock %}
+{% block page_title %}<i class="bi bi-heart-pulse-fill me-2 text-primary"></i>System Health{% endblock %}
+
+{% block content %}
+<div class="page-header-row mb-4">
+  <div>
+    <h2 class="page-h2">Service Health Dashboard</h2>
+    <p class="text-muted">Real-time status of all system components</p>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <div class="status-pill">
+      <span class="pulse-dot"></span> All Systems Operational
+    </div>
+    <a href="{{ url_for('health') }}" target="_blank" class="btn btn-sm btn-outline-success">
+      <i class="bi bi-activity me-1"></i>Live /health API
+    </a>
+  </div>
+</div>
+
+<!-- ═══ Service Status Cards ══════════════════════════════════════════════════ -->
+<div class="row g-3 mb-4">
+  {% for svc in services %}
+  <div class="col-sm-6 col-xl-4">
+    <div class="service-card service-healthy">
+      <div class="svc-icon"><i class="bi {{ svc.icon }} text-green"></i></div>
+      <div class="svc-body">
+        <div class="svc-name">{{ svc.name }}</div>
+        <div class="svc-status"><span class="pulse-dot-sm me-1"></span>{{ svc.status | title }}</div>
+      </div>
+      <div class="svc-metrics">
+        <div><span class="text-muted small">Latency</span><div class="text-cyan fw-bold">{{ svc.latency }}</div></div>
+        <div><span class="text-muted small">Uptime</span><div class="text-green fw-bold">{{ svc.uptime }}</div></div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ═══ Real /health API Response ════════════════════════════════════════════ -->
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="card-dark h-100">
+      <div class="card-dark-header">
+        <span><i class="bi bi-braces me-2 text-cyan"></i>Live /health Endpoint Response</span>
+        <span class="badge-live">🟢 Real Data</span>
+      </div>
+      <div class="card-dark-body">
+        <pre class="code-block" id="healthJson"><code class="text-green">Loading…</code></pre>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card-dark h-100">
+      <div class="card-dark-header">
+        <span><i class="bi bi-graph-up me-2 text-purple"></i>Uptime History (30 days)</span>
+        <span class="badge-demo">📊 Demo</span>
+      </div>
+      <div class="card-dark-body">
+        <canvas id="uptimeChart" height="130"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ System Metrics ════════════════════════════════════════════════════════ -->
+<div class="card-dark mb-4">
+  <div class="card-dark-header">
+    <span><i class="bi bi-speedometer2 me-2 text-yellow"></i>Simulated System Metrics</span>
+    <span class="badge-demo">📊 Demo Data</span>
+  </div>
+  <div class="card-dark-body">
+    <div class="row g-4">
+      <div class="col-md-3 col-6 text-center">
+        <div class="metric-circle" style="--pct:68%">
+          <div class="metric-label">CPU Usage</div>
+          <div class="metric-val text-blue">68%</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6 text-center">
+        <div class="metric-circle" style="--pct:42%">
+          <div class="metric-label">Memory</div>
+          <div class="metric-val text-cyan">42%</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6 text-center">
+        <div class="metric-circle" style="--pct:28%">
+          <div class="metric-label">Disk I/O</div>
+          <div class="metric-val text-purple">28%</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6 text-center">
+        <div class="metric-circle" style="--pct:15%">
+          <div class="metric-label">Network</div>
+          <div class="metric-val text-green">15%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Fetch real health data
+  fetch('/health').then(r => r.json()).then(data => {
+    document.getElementById('healthJson').innerHTML =
+      '<code class="text-green">' + JSON.stringify(data, null, 2) + '</code>';
+  });
+
+  // Uptime chart (demo)
+  const ctx = document.getElementById('uptimeChart').getContext('2d');
+  const labels = Array.from({length: 30}, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - 29 + i);
+    return d.toLocaleDateString('en', {month:'short', day:'numeric'});
+  });
+  const uptime = labels.map(() => +(Math.random() * 0.5 + 99.5).toFixed(2));
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Uptime %',
+        data: uptime,
+        fill: true,
+        backgroundColor: 'rgba(34,197,94,0.1)',
+        borderColor: '#22c55e',
+        borderWidth: 2,
+        tension: 0.4,
+        pointRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#94a3b8' } } },
+      scales: {
+        x: { ticks: { color: '#94a3b8', maxTicksLimit: 6 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, min: 98, max: 100.5 }
+      }
+    }
+  });
+</script>
+{% endblock %}

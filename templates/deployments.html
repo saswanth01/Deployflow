@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Deployments — DeployFlow{% endblock %}
+{% block page_title %}<i class="bi bi-arrow-repeat me-2 text-primary"></i>Deployment History{% endblock %}
+
+{% block content %}
+<div class="page-header-row mb-4">
+  <div>
+    <h2 class="page-h2">All Deployments</h2>
+    <p class="text-muted">Complete history of all pipeline runs across environments</p>
+  </div>
+  <div class="d-flex gap-2">
+    <select class="form-select form-select-sm bg-dark text-light border-secondary" id="filterEnv" style="width:140px">
+      <option value="">All Envs</option>
+      <option value="production">Production</option>
+      <option value="staging">Staging</option>
+      <option value="development">Development</option>
+    </select>
+    <select class="form-select form-select-sm bg-dark text-light border-secondary" id="filterStatus" style="width:130px">
+      <option value="">All Status</option>
+      <option value="success">Success</option>
+      <option value="failed">Failed</option>
+      <option value="running">Running</option>
+    </select>
+  </div>
+</div>
+
+<div class="card-dark">
+  <div class="card-dark-header">
+    <span><i class="bi bi-table me-2 text-cyan"></i>{{ deployments|length }} deployment records</span>
+    <span class="badge-demo">📊 Seeded Demo Data</span>
+  </div>
+  <div class="card-dark-body p-0">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover mb-0 deployments-table" id="deploymentsTable">
+        <thead>
+          <tr>
+            <th>Deploy ID</th>
+            <th>Branch</th>
+            <th>Commit</th>
+            <th>Author</th>
+            <th>Environment</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>Triggered</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in deployments %}
+          <tr data-env="{{ d.environment }}" data-status="{{ d.status }}">
+            <td><code class="text-cyan">{{ d.deploy_id }}</code></td>
+            <td><span class="branch-badge"><i class="bi bi-git me-1"></i>{{ d.branch }}</span></td>
+            <td><code class="text-purple">{{ d.commit_hash[:7] }}</code></td>
+            <td><span class="text-muted">{{ d.author.split('@')[0] }}</span></td>
+            <td>
+              {% if d.environment == 'production' %}
+                <span class="env-tag env-prod">prod</span>
+              {% elif d.environment == 'staging' %}
+                <span class="env-tag env-stage">stage</span>
+              {% else %}
+                <span class="env-tag env-dev">dev</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if d.status == 'success' %}
+                <span class="status-badge success"><i class="bi bi-check-circle-fill me-1"></i>Success</span>
+              {% elif d.status == 'failed' %}
+                <span class="status-badge failed"><i class="bi bi-x-circle-fill me-1"></i>Failed</span>
+              {% else %}
+                <span class="status-badge running"><i class="bi bi-arrow-repeat me-1 spin"></i>Running</span>
+              {% endif %}
+            </td>
+            <td><span class="text-muted">{{ d.duration }}s</span></td>
+            <td><span class="text-muted small">{{ d.triggered_at[:16] }}</span></td>
+            <td><span class="text-muted small" title="{{ d.message }}">{{ (d.message or '')[:40] }}{% if (d.message or '')|length > 40 %}…{% endif %}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="alert-demo mt-3">
+  <i class="bi bi-info-circle-fill me-2"></i>
+  <strong>Demo Notice:</strong> Deployment records are seeded into SQLite at first run. They represent realistic but fictional CI/CD pipeline executions.
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Client-side filter
+  function filterTable() {
+    const env = document.getElementById('filterEnv').value;
+    const status = document.getElementById('filterStatus').value;
+    document.querySelectorAll('#deploymentsTable tbody tr').forEach(row => {
+      const envMatch = !env || row.dataset.env === env;
+      const statusMatch = !status || row.dataset.status === status;
+      row.style.display = envMatch && statusMatch ? '' : 'none';
+    });
+  }
+  document.getElementById('filterEnv').addEventListener('change', filterTable);
+  document.getElementById('filterStatus').addEventListener('change', filterTable);
+</script>
+{% endblock %}

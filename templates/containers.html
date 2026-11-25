@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Containers — DeployFlow{% endblock %}
+{% block page_title %}<i class="bi bi-box-seam-fill me-2 text-primary"></i>Docker Container Status{% endblock %}
+
+{% block content %}
+<div class="page-header-row mb-4">
+  <div>
+    <h2 class="page-h2">Container Fleet</h2>
+    <p class="text-muted">Real-time status of Docker containers — data refreshes every 15 seconds</p>
+  </div>
+  <button class="btn btn-sm btn-outline-cyan" onclick="refreshContainers()">
+    <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+  </button>
+</div>
+
+<!-- ═══ Container Cards ═══════════════════════════════════════════════════════ -->
+<div class="row g-3 mb-4" id="containerGrid">
+  {% for c in containers %}
+  <div class="col-sm-6 col-xl-4">
+    <div class="container-card {% if c.status == 'running' %}container-running{% else %}container-stopped{% endif %}">
+      <div class="cc-header">
+        <div class="cc-name">
+          <i class="bi bi-box-seam me-2 {% if c.status == 'running' %}text-green{% else %}text-muted{% endif %}"></i>
+          <span>{{ c.name }}</span>
+        </div>
+        <span class="status-badge {% if c.status == 'running' %}success{% else %}stopped{% endif %}">
+          {% if c.status == 'running' %}
+            <span class="pulse-dot-sm me-1"></span>Running
+          {% else %}
+            <i class="bi bi-stop-circle me-1"></i>Stopped
+          {% endif %}
+        </span>
+      </div>
+      <div class="cc-body">
+        <div class="cc-row">
+          <span class="cc-key"><i class="bi bi-layers me-1"></i>Image</span>
+          <code class="text-cyan">{{ c.image }}:{{ c.tag }}</code>
+        </div>
+        <div class="cc-row">
+          <span class="cc-key"><i class="bi bi-plug me-1"></i>Port</span>
+          <code class="text-purple">{{ c.port }}</code>
+        </div>
+        <div class="cc-row">
+          <span class="cc-key"><i class="bi bi-clock me-1"></i>Uptime</span>
+          <span class="text-muted">{{ c.uptime }}</span>
+        </div>
+        {% if c.status == 'running' %}
+        <div class="cc-metrics mt-2">
+          <div class="cc-metric">
+            <div class="cc-metric-label">CPU</div>
+            <div class="cc-metric-bar">
+              <div class="cc-metric-fill cpu-fill" style="width: {{ [c.cpu_usage * 5, 100]|min }}%"></div>
+            </div>
+            <div class="cc-metric-val">{{ c.cpu_usage }}%</div>
+          </div>
+          <div class="cc-metric">
+            <div class="cc-metric-label">MEM</div>
+            <div class="cc-metric-bar">
+              <div class="cc-metric-fill mem-fill" style="width: {{ [c.memory_usage / 5, 100]|min }}%"></div>
+            </div>
+            <div class="cc-metric-val">{{ c.memory_usage }} MB</div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ═══ Docker Commands Reference ════════════════════════════════════════════ -->
+<div class="card-dark mb-4">
+  <div class="card-dark-header">
+    <span><i class="bi bi-terminal me-2 text-green"></i>Useful Docker Commands</span>
+  </div>
+  <div class="card-dark-body">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="cmd-block">
+          <div class="cmd-label">Build image</div>
+          <pre><code>docker build -t deployflow:latest .</code></pre>
+        </div>
+        <div class="cmd-block mt-2">
+          <div class="cmd-label">Run container</div>
+          <pre><code>docker run -d -p 5000:5000 --name deployflow deployflow:latest</code></pre>
+        </div>
+        <div class="cmd-block mt-2">
+          <div class="cmd-label">View logs</div>
+          <pre><code>docker logs -f deployflow</code></pre>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="cmd-block">
+          <div class="cmd-label">Docker Compose (recommended)</div>
+          <pre><code>docker-compose up -d --build</code></pre>
+        </div>
+        <div class="cmd-block mt-2">
+          <div class="cmd-label">Stop & remove</div>
+          <pre><code>docker-compose down</code></pre>
+        </div>
+        <div class="cmd-block mt-2">
+          <div class="cmd-label">Inspect health</div>
+          <pre><code>docker inspect --format='{{"{{"}}json .State.Health{{"}}"}}' deployflow</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="alert-demo">
+  <i class="bi bi-info-circle-fill me-2"></i>
+  <strong>Demo Notice:</strong> Container records are stored in SQLite. CPU/memory values are seeded demo data, not live Docker stats.
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function refreshContainers() {
+    fetch('/api/containers').then(r => r.json()).then(data => {
+      // In a real app, would re-render the grid. This shows an alert for demo.
+      console.log('Container data refreshed:', data);
+      const btn = document.querySelector('[onclick="refreshContainers()"]');
+      btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Refreshed!';
+      setTimeout(() => btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Refresh', 2000);
+    });
+  }
+  // Auto-refresh every 15 seconds
+  setInterval(refreshContainers, 15000);
+</script>
+{% endblock %}
